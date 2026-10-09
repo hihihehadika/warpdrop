@@ -94,9 +94,3 @@ warpdrop/
 │   └── qr/               ASCII QR Code terminal renderer
 └── web/static/           Embedded browser UI (HTML, CSS, JS)
 ```
-
----
-
-## License
-
-MIT License. See [LICENSE](LICENSE) for details.
