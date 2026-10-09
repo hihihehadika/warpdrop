@@ -1,0 +1,30 @@
+# Compiled binary
+warpdrop.exe
+warpdrop
+
+# Go build cache
+/vendor/
+
+# Received files directory (runtime-generated, not tracked)
+warpdrop_received/
+
+# Go test cache
+*.test
+
+# Environment and secrets
+.env
+.env.local
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Go workspace
+go.work
+go.work.sum
