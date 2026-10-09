@@ -1,6 +1,6 @@
 # Compiled binary
-warpdrop.exe
-warpdrop
+/warpdrop.exe
+/warpdrop
 
 # Go build cache
 /vendor/
