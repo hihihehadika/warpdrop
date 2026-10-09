@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>WarpDrop - Local P2P File Transfer</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Top App Bar -->
+        <header class="app-header">
+            <div class="brand">
+                <span class="brand-badge">P2P</span>
+                <h1 class="brand-title">WARPDROP</h1>
+            </div>
+            <div class="connection-status">
+                <span id="statusIndicator" class="status-dot"></span>
+                <span id="statusText" class="status-label">TERHUBUNG</span>
+            </div>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <nav class="tab-nav">
+            <button id="tabUploadBtn" class="tab-btn active" onclick="switchTab('upload')">KIRIM BERKAS</button>
+            <button id="tabDownloadBtn" class="tab-btn" onclick="switchTab('download')">BERKAS DI LAPTOP</button>
+        </nav>
+
+        <!-- Main Content: Upload Section -->
+        <main id="uploadSection" class="content-section active">
+            <!-- Dropzone -->
+            <div id="dropzone" class="dropzone">
+                <div class="dropzone-content">
+                    <div class="dropzone-icon-box">
+                        <svg class="dropzone-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="17 8 12 3 7 8"></polyline>
+                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                        </svg>
+                    </div>
+                    <p class="dropzone-title">Tarik berkas ke sini atau pilih dari perangkat</p>
+                    <p class="dropzone-subtitle">Mendukung banyak file sekaligus tanpa batasan kuota</p>
+                    <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">PILIH BERKAS</button>
+                    <input type="file" id="fileInput" multiple style="display: none;">
+                </div>
+            </div>
+
+            <!-- Active Transfer Speedometer Card -->
+            <div id="speedometerCard" class="card speedometer-card" style="display: none;">
+                <div class="speedometer-header">
+                    <span id="transferFileName" class="transfer-filename">Mengirim berkas...</span>
+                    <span id="transferPercentage" class="transfer-percentage">0%</span>
+                </div>
+                <div class="progress-bar-container">
+                    <div id="progressBar" class="progress-bar" style="width: 0%;"></div>
+                </div>
+                <div class="speedometer-stats">
+                    <div class="stat-item">
+                        <span class="stat-label">KECEPATAN</span>
+                        <span id="transferSpeed" class="stat-value">0.0 MB/s</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">TERKIRIM</span>
+                        <span id="transferBytes" class="stat-value">0 B / 0 B</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">SISA WAKTU</span>
+                        <span id="transferEta" class="stat-value">--</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Queue Container -->
+            <div id="queueSection" class="queue-section" style="display: none;">
+                <div class="section-header">
+                    <h2 class="section-title">ANTEAN BERKAS (<span id="queueCount">0</span>)</h2>
+                    <button id="clearCompletedBtn" class="btn-text" onclick="clearCompletedQueue()">BERSIHKAN SELESAI</button>
+                </div>
+                <ul id="queueList" class="queue-list"></ul>
+            </div>
+        </main>
+
+        <!-- Main Content: Download / Laptop Files Section -->
+        <main id="downloadSection" class="content-section" style="display: none;">
+            <div class="section-header">
+                <h2 class="section-title">BERKAS TERSEDIA DI LAPTOP</h2>
+                <button class="btn btn-secondary btn-sm" onclick="fetchFilesList()">SEGARKAN</button>
+            </div>
+            <div id="emptyFilesMessage" class="empty-message" style="display: none;">
+                <p>Belum ada berkas yang tersimpan di laptop.</p>
+            </div>
+            <ul id="filesList" class="files-list"></ul>
+        </main>
+
+        <!-- Operational Info Footer -->
+        <footer class="app-footer">
+            <p>Jaringan Lokal P2P &bull; Mode Offline Mandiri &bull; Enkripsi Sesi Aktif</p>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
