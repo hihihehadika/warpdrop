@@ -11,6 +11,9 @@ import (
 	"warpdrop/internal/storage"
 )
 
+// Maximum upload payload size allowed (10 GB) to prevent denial-of-service via disk exhaustion.
+const maxUploadBytes = 10 * 1024 * 1024 * 1024
+
 // UploadResponse represents JSON response sent after file upload processing.
 type UploadResponse struct {
 	Status  string             `json:"status"`
@@ -27,8 +30,22 @@ func UploadHandler(provider storage.StorageProvider) http.HandlerFunc {
 			return
 		}
 
+		// Enforce maximum body size
+		r.Body = http.MaxBytesReader(w, r.Body, maxUploadBytes)
+
 		reader, err := r.MultipartReader()
 		if err != nil {
+			var maxBytesErr *http.MaxBytesError
+			if errors.As(err, &maxBytesErr) {
+				log.Printf("[WARN] Ukuran payload melebihi batas maksimum 10 GB")
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusRequestEntityTooLarge)
+				json.NewEncoder(w).Encode(UploadResponse{
+					Status:  "error",
+					Message: "Ukuran payload melebihi batas maksimum 10 GB",
+				})
+				return
+			}
 			log.Printf("[ERROR] Gagal menginisialisasi multipart reader: %v", err)
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusBadRequest)
@@ -48,6 +65,17 @@ func UploadHandler(provider storage.StorageProvider) http.HandlerFunc {
 				if errors.Is(err, io.EOF) {
 					break
 				}
+				var maxBytesErr *http.MaxBytesError
+				if errors.As(err, &maxBytesErr) {
+					log.Printf("[WARN] Ukuran payload melebihi batas maksimum 10 GB")
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusRequestEntityTooLarge)
+					json.NewEncoder(w).Encode(UploadResponse{
+						Status:  "error",
+						Message: "Ukuran payload melebihi batas maksimum 10 GB",
+					})
+					return
+				}
 				log.Printf("[ERROR] Terjadi gangguan saat membaca multipart stream: %v", err)
 				break
 			}
@@ -63,6 +91,17 @@ func UploadHandler(provider storage.StorageProvider) http.HandlerFunc {
 			part.Close()
 
 			if err != nil {
+				var maxBytesErr *http.MaxBytesError
+				if errors.As(err, &maxBytesErr) {
+					log.Printf("[WARN] Ukuran berkas '%s' melebihi batas maksimum 10 GB", filename)
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusRequestEntityTooLarge)
+					json.NewEncoder(w).Encode(UploadResponse{
+						Status:  "error",
+						Message: "Ukuran payload melebihi batas maksimum 10 GB",
+					})
+					return
+				}
 				log.Printf("[ERROR] Gagal menyimpan berkas '%s': %v", filename, err)
 				continue
 			}
