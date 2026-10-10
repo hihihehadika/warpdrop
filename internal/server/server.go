@@ -6,15 +6,17 @@ import (
 	"net/http"
 	"time"
 
+	"warpdrop/internal/auth"
 	"warpdrop/internal/storage"
 )
 
 // Config holds runtime configuration options for WarpDrop HTTP server.
 type Config struct {
-	Port     int
-	Token    string
-	Storage  storage.StorageProvider
-	StaticFS http.FileSystem
+	Port       int
+	Token      string
+	PINManager *auth.PINManager
+	Storage    storage.StorageProvider
+	StaticFS   http.FileSystem
 }
 
 // Server encapsulates http.Server and lifecycle management.
@@ -34,6 +36,11 @@ func NewServer(cfg Config) *Server {
 		w.Write([]byte(`{"status":"online","version":"1.0.0"}`))
 	})
 
+	// Public PIN authentication exchange route
+	if cfg.PINManager != nil {
+		mux.HandleFunc("/api/v1/auth/pin", PINAuthHandler(cfg.PINManager))
+	}
+
 	// Protected API routes
 	apiMux := http.NewServeMux()
 	apiMux.HandleFunc("/api/v1/upload", UploadHandler(cfg.Storage))
@@ -48,7 +55,7 @@ func NewServer(cfg Config) *Server {
 	// Static web assets handler (if provided)
 	if cfg.StaticFS != nil {
 		fileServer := http.FileServer(cfg.StaticFS)
-		mux.Handle("/", AuthMiddleware(cfg.Token, fileServer))
+		mux.Handle("/", StaticSessionMiddleware(cfg.Token, fileServer))
 	}
 
 	httpSrv := &http.Server{

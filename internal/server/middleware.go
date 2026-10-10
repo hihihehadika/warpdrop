@@ -56,3 +56,22 @@ func AuthMiddleware(expectedToken string, next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 	})
 }
+
+// StaticSessionMiddleware captures ?token=... on static web requests to set the session cookie,
+// but does not reject unauthenticated visitors so the client UI can present the 4-digit PIN login modal.
+func StaticSessionMiddleware(expectedToken string, next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		token := r.URL.Query().Get("token")
+		if token != "" && security.ValidateToken(token, expectedToken) {
+			http.SetCookie(w, &http.Cookie{
+				Name:     sessionCookieName,
+				Value:    expectedToken,
+				Path:     "/",
+				HttpOnly: true,
+				SameSite: http.SameSiteLaxMode,
+				Expires:  time.Now().Add(24 * time.Hour),
+			})
+		}
+		next.ServeHTTP(w, r)
+	})
+}
