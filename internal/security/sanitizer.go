@@ -12,6 +12,9 @@ import (
 // ErrPathTraversal detected when resolved destination escapes base directory boundary.
 var ErrPathTraversal = errors.New("potential path traversal attempt detected")
 
+// ErrCollisionLimitExceeded detected when available sequential file collision indices are exhausted.
+var ErrCollisionLimitExceeded = errors.New("maximum sequential file collision limit exceeded")
+
 // SanitizeFilename strips directory components, control characters, and unsafe symbols.
 func SanitizeFilename(raw string) string {
 	cleaned := filepath.Base(raw)
@@ -76,6 +79,7 @@ func GetSafeDestinationPath(baseDir, filename string) (string, error) {
 				return candidatePath, nil
 			}
 		}
+		return "", ErrCollisionLimitExceeded
 	}
 
 	return cleanTarget, nil
