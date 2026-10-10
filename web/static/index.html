@@ -128,9 +128,12 @@
                 <span class="brand-badge">AUTH</span>
                 <h2 class="modal-title">WARPDROP PIN</h2>
             </div>
-            <p class="modal-desc">Masukkan 4-digit PIN yang ditampilkan pada terminal laptop untuk menghubungkan:</p>
-            <div class="pin-input-container">
-                <input type="password" id="pinInput" class="pin-input" maxlength="4" pattern="[0-9]*" inputmode="numeric" placeholder="----" autocomplete="off">
+            <div class="pin-slots-wrapper" onclick="document.getElementById('pinInput').focus()">
+                <div class="pin-slot active" id="pinSlot0">—</div>
+                <div class="pin-slot" id="pinSlot1">—</div>
+                <div class="pin-slot" id="pinSlot2">—</div>
+                <div class="pin-slot" id="pinSlot3">—</div>
+                <input type="tel" id="pinInput" class="pin-hidden-input" maxlength="4" pattern="[0-9]*" inputmode="numeric" autocomplete="one-time-code" autofocus>
             </div>
             <div id="pinErrorMessage" class="modal-error" style="display: none;"></div>
             <button id="pinSubmitBtn" class="btn btn-primary btn-block" onclick="submitPinAuth()">MASUK</button>

@@ -71,12 +71,57 @@ function initPinInput() {
     });
 
     pinInput.addEventListener('input', () => {
-        pinInput.classList.remove('error');
+        const val = pinInput.value.replace(/\D/g, '').slice(0, 4);
+        pinInput.value = val;
+        updatePinSlots();
         document.getElementById('pinErrorMessage').style.display = 'none';
-        if (pinInput.value.length === 4) {
+
+        if (val.length === 4) {
             submitPinAuth();
         }
     });
+
+    pinInput.addEventListener('focus', updatePinSlots);
+    pinInput.addEventListener('blur', updatePinSlots);
+}
+
+function updatePinSlots() {
+    const pinInput = document.getElementById('pinInput');
+    if (!pinInput) return;
+
+    const val = pinInput.value;
+    const isFocused = document.activeElement === pinInput;
+
+    for (let i = 0; i < 4; i++) {
+        const slot = document.getElementById('pinSlot' + i);
+        if (!slot) continue;
+
+        slot.classList.remove('error');
+        if (i < val.length) {
+            slot.textContent = '●';
+            slot.classList.add('filled');
+            slot.classList.remove('active');
+        } else if (i === val.length && isFocused) {
+            slot.textContent = '—';
+            slot.classList.remove('filled');
+            slot.classList.add('active');
+        } else {
+            slot.textContent = '—';
+            slot.classList.remove('filled', 'active');
+        }
+    }
+}
+
+function setPinSlotsError() {
+    for (let i = 0; i < 4; i++) {
+        const slot = document.getElementById('pinSlot' + i);
+        if (slot) slot.classList.add('error');
+    }
+    const wrapper = document.querySelector('.pin-slots-wrapper');
+    if (wrapper) {
+        wrapper.classList.add('shake');
+        setTimeout(() => wrapper.classList.remove('shake'), 400);
+    }
 }
 
 function showPinModal() {
@@ -86,7 +131,8 @@ function showPinModal() {
         const input = document.getElementById('pinInput');
         if (input) {
             input.value = '';
-            input.focus();
+            updatePinSlots();
+            setTimeout(() => input.focus(), 60);
         }
     }
 }
@@ -105,7 +151,7 @@ function submitPinAuth() {
     if (pin.length !== 4) {
         errorEl.textContent = 'Masukkan 4-digit PIN dengan benar';
         errorEl.style.display = 'block';
-        pinInput.classList.add('error');
+        setPinSlotsError();
         return;
     }
 
@@ -122,6 +168,7 @@ function submitPinAuth() {
         submitBtn.textContent = 'MASUK';
 
         if (res.status === 429) {
+            setPinSlotsError();
             startLockoutCountdown(60);
             return;
         }
@@ -130,9 +177,12 @@ function submitPinAuth() {
         if (!res.ok) {
             errorEl.textContent = data.message || 'Kode PIN salah';
             errorEl.style.display = 'block';
-            pinInput.classList.add('error');
+            setPinSlotsError();
             pinInput.value = '';
-            pinInput.focus();
+            setTimeout(() => {
+                updatePinSlots();
+                pinInput.focus();
+            }, 500);
             return;
         }
 
