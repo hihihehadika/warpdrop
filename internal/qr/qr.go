@@ -66,6 +66,14 @@ func RenderTerminalQR(url string) (string, error) {
 	return sb.String(), nil
 }
 
+// MaskToken conceals middle characters of sensitive session tokens for safe terminal display.
+func MaskToken(token string) string {
+	if len(token) <= 8 {
+		return strings.Repeat("*", len(token))
+	}
+	return token[:4] + strings.Repeat("*", len(token)-8) + token[len(token)-4:]
+}
+
 // FormatBanner generates a formatted status banner containing connection instructions.
 func FormatBanner(ip string, port int, token string, storageDir string) string {
 	url := fmt.Sprintf("http://%s:%d/?token=%s", ip, port, token)
@@ -74,6 +82,7 @@ func FormatBanner(ip string, port int, token string, storageDir string) string {
 		qrArt = fmt.Sprintf("[WARN] Gagal membuat visual QR Code: %v\n", err)
 	}
 
+	maskedURL := fmt.Sprintf("http://%s:%d/?token=%s", ip, port, MaskToken(token))
 	separator := strings.Repeat("=", 64)
 
 	var sb strings.Builder
@@ -85,8 +94,9 @@ func FormatBanner(ip string, port int, token string, storageDir string) string {
 	sb.WriteString(fmt.Sprintf("[FOLDER]  Direktori Penyimpanan: %s\n", storageDir))
 	sb.WriteString("\nArahkan kamera HP ke QR Code di bawah untuk menghubungkan:\n\n")
 	sb.WriteString(qrArt)
-	sb.WriteString("\nAtau buka alamat berikut secara manual di browser HP:\n")
-	sb.WriteString(fmt.Sprintf("%s\n\n", url))
+	sb.WriteString("\nAlamat URL Akses (Token Terproteksi):\n")
+	sb.WriteString(fmt.Sprintf("%s\n", maskedURL))
+	sb.WriteString("(Pindai QR Code di atas dengan kamera HP untuk autentikasi otomatis)\n\n")
 	sb.WriteString("[PANDUAN OPERASIONAL]\n")
 	sb.WriteString("1. Pastikan HP dan Laptop terhubung ke WiFi atau Hotspot yang sama.\n")
 	sb.WriteString("2. Jika koneksi gagal, router kemungkinan mengaktifkan AP Isolation.\n")

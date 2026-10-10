@@ -27,6 +27,24 @@ func TestRenderTerminalQR(t *testing.T) {
 	}
 }
 
+func TestMaskToken(t *testing.T) {
+	cases := []struct {
+		input    string
+		expected string
+	}{
+		{"12345", "*****"},
+		{"12345678", "********"},
+		{"abcdef0123456789", "abcd********6789"},
+	}
+
+	for _, c := range cases {
+		got := MaskToken(c.input)
+		if got != c.expected {
+			t.Errorf("MaskToken(%q) = %q; expected %q", c.input, got, c.expected)
+		}
+	}
+}
+
 func TestFormatBanner(t *testing.T) {
 	ip := "192.168.43.15"
 	port := 8080
@@ -39,7 +57,7 @@ func TestFormatBanner(t *testing.T) {
 		"WARPDROP",
 		"192.168.43.15",
 		"8080",
-		"abcdef0123456789",
+		MaskToken(token),
 		storageDir,
 		"[PANDUAN OPERASIONAL]",
 		"AP Isolation",
