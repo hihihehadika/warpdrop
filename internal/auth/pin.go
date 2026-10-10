@@ -96,6 +96,15 @@ func (m *PINManager) VerifyPIN(clientIP, pin string) (bool, error) {
 
 	now := time.Now()
 
+	// Periodic cleanup of stale IP records if map exceeds 1000 items
+	if len(m.ipRecords) > 1000 {
+		for ip, r := range m.ipRecords {
+			if !now.Before(r.lockedUntil) && r.failedAttempts == 0 {
+				delete(m.ipRecords, ip)
+			}
+		}
+	}
+
 	// Check IP lockout record
 	rec, exists := m.ipRecords[clientIP]
 	if !exists {
@@ -103,8 +112,13 @@ func (m *PINManager) VerifyPIN(clientIP, pin string) (bool, error) {
 		m.ipRecords[clientIP] = rec
 	}
 
-	if now.Before(rec.lockedUntil) {
-		return false, ErrIPLockedOut
+	// Handle expired lockout: reset failed attempts for a fresh chance
+	if !rec.lockedUntil.IsZero() {
+		if now.Before(rec.lockedUntil) {
+			return false, ErrIPLockedOut
+		}
+		rec.failedAttempts = 0
+		rec.lockedUntil = time.Time{}
 	}
 
 	// Check expiration

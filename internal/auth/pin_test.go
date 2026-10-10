@@ -60,14 +60,29 @@ func TestPINManager(t *testing.T) {
 	}
 }
 
-func TestPINExpiration(t *testing.T) {
-	mgr := NewPINManager("token_test", 10*time.Millisecond)
-	pin, _ := mgr.GetActivePIN()
+func TestLockoutResetAfterCooldown(t *testing.T) {
+	mgr := NewPINManager("test_token", 10*time.Minute)
+	mgr.lockDuration = 20 * time.Millisecond // Short duration for test
 
-	time.Sleep(20 * time.Millisecond)
+	testIP := "192.168.1.88"
 
-	ok, err := mgr.VerifyPIN("192.168.1.1", pin)
-	if ok || err != ErrPINExpired {
-		t.Fatalf("expected ErrPINExpired for expired PIN, got: %v", err)
+	// Trigger lockout with 5 wrong attempts
+	for i := 1; i <= 5; i++ {
+		mgr.VerifyPIN(testIP, "wrong")
+	}
+
+	// Must be locked
+	ok, err := mgr.VerifyPIN(testIP, "wrong")
+	if ok || err != ErrIPLockedOut {
+		t.Fatalf("expected ErrIPLockedOut, got: %v", err)
+	}
+
+	// Wait for cooldown to expire
+	time.Sleep(30 * time.Millisecond)
+
+	// After cooldown, 1 wrong attempt should return ErrInvalidPIN (NOT ErrIPLockedOut)
+	okAfter, errAfter := mgr.VerifyPIN(testIP, "wrong")
+	if okAfter || errAfter != ErrInvalidPIN {
+		t.Fatalf("expected fresh chance (ErrInvalidPIN) after cooldown, got: %v", errAfter)
 	}
 }
