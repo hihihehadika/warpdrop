@@ -3,6 +3,7 @@ package server
 import (
 	"encoding/json"
 	"errors"
+	"net"
 	"net/http"
 	"strings"
 	"time"
@@ -28,9 +29,9 @@ func PINAuthHandler(pinMgr *auth.PINManager) http.HandlerFunc {
 			return
 		}
 
-		clientIP := r.RemoteAddr
-		if idx := strings.LastIndex(clientIP, ":"); idx != -1 {
-			clientIP = clientIP[:idx]
+		clientIP, _, err := net.SplitHostPort(r.RemoteAddr)
+		if err != nil {
+			clientIP = r.RemoteAddr
 		}
 
 		var req pinAuthRequest

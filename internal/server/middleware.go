@@ -2,8 +2,8 @@ package server
 
 import (
 	"log"
+	"net"
 	"net/http"
-	"strings"
 	"time"
 
 	"warpdrop/internal/security"
@@ -31,9 +31,9 @@ func AuthMiddleware(expectedToken string, next http.Handler) http.Handler {
 		}
 
 		if !security.ValidateToken(token, expectedToken) {
-			clientIP := r.RemoteAddr
-			if idx := strings.LastIndex(clientIP, ":"); idx != -1 {
-				clientIP = clientIP[:idx]
+			clientIP, _, err := net.SplitHostPort(r.RemoteAddr)
+			if err != nil {
+				clientIP = r.RemoteAddr
 			}
 			log.Printf("[WARN] Akses ilegal ditolak dari IP: %s (path: %s)", clientIP, r.URL.Path)
 
