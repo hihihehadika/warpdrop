@@ -23,6 +23,7 @@
         <!-- Navigation Tabs -->
         <nav class="tab-nav">
             <button id="tabUploadBtn" class="tab-btn active" onclick="switchTab('upload')">KIRIM BERKAS</button>
+            <button id="tabClipboardBtn" class="tab-btn" onclick="switchTab('clipboard')">CLIPBOARD</button>
             <button id="tabDownloadBtn" class="tab-btn" onclick="switchTab('download')">BERKAS DI LAPTOP</button>
         </nav>
 
@@ -80,11 +81,33 @@
             </div>
         </main>
 
+        <!-- Main Content: Shared Clipboard Section -->
+        <main id="clipboardSection" class="content-section" style="display: none;">
+            <div class="card clipboard-editor-card">
+                <textarea id="clipboardInput" class="clipboard-textarea" rows="4" placeholder="Ketik atau tempel teks/tautan di sini untuk disinkronkan secara instan..."></textarea>
+                <div class="clipboard-actions">
+                    <button class="btn btn-primary btn-block" onclick="sendClipboardText()">KIRIM KE SEMUA PERANGKAT</button>
+                </div>
+            </div>
+
+            <div class="section-header" style="margin-top: 1.5rem;">
+                <h2 class="section-title">RIWAYAT CLIPBOARD DITERIMA</h2>
+                <button class="btn-text" onclick="clearClipboardHistory()">BERSIHKAN RIWAYAT</button>
+            </div>
+            <div id="emptyClipboardMsg" class="empty-message">
+                <p>Belum ada teks atau tautan yang disinkronkan.</p>
+            </div>
+            <ul id="clipboardList" class="clipboard-list"></ul>
+        </main>
+
         <!-- Main Content: Download / Laptop Files Section -->
         <main id="downloadSection" class="content-section" style="display: none;">
             <div class="section-header">
                 <h2 class="section-title">BERKAS TERSEDIA DI LAPTOP</h2>
-                <button class="btn btn-secondary btn-sm" onclick="fetchFilesList()">SEGARKAN</button>
+                <div class="action-btn-group">
+                    <button id="downloadAllBtn" class="btn btn-primary btn-sm" onclick="downloadAllZip()">UNDUH SEMUA (.ZIP)</button>
+                    <button class="btn btn-secondary btn-sm" onclick="fetchFilesList()">SEGARKAN</button>
+                </div>
             </div>
             <div id="emptyFilesMessage" class="empty-message" style="display: none;">
                 <p>Belum ada berkas yang tersimpan di laptop.</p>
@@ -96,6 +119,22 @@
         <footer class="app-footer">
             <p>Jaringan Lokal P2P &bull; Mode Offline Mandiri &bull; Enkripsi Sesi Aktif</p>
         </footer>
+    </div>
+
+    <!-- 4-Digit Quick PIN Login Modal -->
+    <div id="pinModal" class="modal-overlay" style="display: none;">
+        <div class="modal-card">
+            <div class="brand" style="justify-content: center; margin-bottom: 0.5rem;">
+                <span class="brand-badge">AUTH</span>
+                <h2 class="modal-title">WARPDROP PIN</h2>
+            </div>
+            <p class="modal-desc">Masukkan 4-digit PIN yang ditampilkan pada terminal laptop untuk menghubungkan:</p>
+            <div class="pin-input-container">
+                <input type="password" id="pinInput" class="pin-input" maxlength="4" pattern="[0-9]*" inputmode="numeric" placeholder="----" autocomplete="off">
+            </div>
+            <div id="pinErrorMessage" class="modal-error" style="display: none;"></div>
+            <button id="pinSubmitBtn" class="btn btn-primary btn-block" onclick="submitPinAuth()">MASUK</button>
+        </div>
     </div>
 
     <script src="app.js"></script>
