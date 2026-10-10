@@ -11,11 +11,13 @@ import (
 	"syscall"
 	"time"
 
+	"warpdrop/internal/auth"
 	"warpdrop/internal/network"
 	"warpdrop/internal/qr"
 	"warpdrop/internal/security"
 	"warpdrop/internal/server"
 	"warpdrop/internal/storage"
+	"warpdrop/internal/ws"
 	"warpdrop/web"
 )
 
@@ -41,6 +43,15 @@ func main() {
 		token = generatedToken
 	}
 
+	// Inisialisasi pengelola 4-digit Quick PIN
+	pinMgr := auth.NewPINManager(token, 10*time.Minute)
+	activePIN, _ := pinMgr.GetActivePIN()
+
+	// Inisialisasi WebSocket Hub untuk Real-Time Shared Clipboard
+	wsHub := ws.NewHub()
+	go wsHub.Run()
+	defer wsHub.Stop()
+
 	// Deteksi alamat IP lokal aktif
 	localIP, err := network.GetLocalIP()
 	if err != nil {
@@ -50,14 +61,16 @@ func main() {
 
 	// Inisialisasi server HTTP dengan static filesystem yang di-embed
 	srv := server.NewServer(server.Config{
-		Port:     *portFlag,
-		Token:    token,
-		Storage:  diskStorage,
-		StaticFS: web.GetFileSystem(),
+		Port:       *portFlag,
+		Token:      token,
+		PINManager: pinMgr,
+		WSHub:      wsHub,
+		Storage:    diskStorage,
+		StaticFS:   web.GetFileSystem(),
 	})
 
-	// Cetak banner informasi dan QR Code di terminal
-	banner := qr.FormatBanner(localIP, *portFlag, token, diskStorage.GetBaseDir())
+	// Cetak banner informasi, Quick PIN, dan QR Code di terminal
+	banner := qr.FormatBanner(localIP, *portFlag, token, activePIN, diskStorage.GetBaseDir())
 	fmt.Print(banner)
 
 	// Jalankan server di goroutine terpisah

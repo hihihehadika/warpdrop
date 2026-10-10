@@ -7,9 +7,11 @@ import (
 	"testing"
 	"time"
 
+	"warpdrop/internal/auth"
 	"warpdrop/internal/security"
 	"warpdrop/internal/server"
 	"warpdrop/internal/storage"
+	"warpdrop/internal/ws"
 	"warpdrop/web"
 )
 
@@ -30,12 +32,19 @@ func TestAppBootstrapAndGracefulShutdown(t *testing.T) {
 		t.Fatalf("failed to generate token: %v", err)
 	}
 
+	pinMgr := auth.NewPINManager(token, 10*time.Minute)
+	wsHub := ws.NewHub()
+	go wsHub.Run()
+	defer wsHub.Stop()
+
 	// Use port 0 or a high test port to avoid collision
 	srv := server.NewServer(server.Config{
-		Port:     18080,
-		Token:    token,
-		Storage:  diskStorage,
-		StaticFS: web.GetFileSystem(),
+		Port:       18080,
+		Token:      token,
+		PINManager: pinMgr,
+		WSHub:      wsHub,
+		Storage:    diskStorage,
+		StaticFS:   web.GetFileSystem(),
 	})
 
 	serverErr := make(chan error, 1)
