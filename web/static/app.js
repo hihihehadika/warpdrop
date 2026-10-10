@@ -12,6 +12,11 @@ const state = {
 
 // Initialize Application
 document.addEventListener('DOMContentLoaded', () => {
+    // Strip token parameter from browser address bar to protect against shoulder surfing
+    if (window.location.search.includes('token=')) {
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
     initDropzone();
     initFileInput();
     checkHealth();
@@ -218,7 +223,7 @@ function processQueue() {
     formData.append('files', nextItem.file);
 
     const xhr = new XMLHttpRequest();
-    const uploadUrl = '/api/v1/upload' + (state.token ? '?token=' + encodeURIComponent(state.token) : '');
+    const uploadUrl = '/api/v1/upload';
     xhr.open('POST', uploadUrl, true);
     if (state.token) {
         xhr.setRequestHeader('X-WarpDrop-Token', state.token);
@@ -278,9 +283,10 @@ function processQueue() {
 function fetchFilesList() {
     const filesList = document.getElementById('filesList');
     const emptyMsg = document.getElementById('emptyFilesMessage');
-    const url = '/api/v1/files' + (state.token ? '?token=' + encodeURIComponent(state.token) : '');
+    const url = '/api/v1/files';
+    const headers = state.token ? { 'X-WarpDrop-Token': state.token } : {};
 
-    fetch(url)
+    fetch(url, { headers })
         .then(res => {
             if (!res.ok) throw new Error('Gagal mengambil daftar berkas');
             return res.json();
@@ -315,8 +321,7 @@ function fetchFilesList() {
                 const downloadLink = document.createElement('a');
                 downloadLink.className = 'btn btn-secondary btn-sm';
                 downloadLink.textContent = 'UNDUH';
-                const downloadUrl = '/api/v1/download?file=' + encodeURIComponent(file.name) +
-                    (state.token ? '&token=' + encodeURIComponent(state.token) : '');
+                const downloadUrl = '/api/v1/download?file=' + encodeURIComponent(file.name);
                 downloadLink.href = downloadUrl;
                 downloadLink.setAttribute('download', file.name);
 
