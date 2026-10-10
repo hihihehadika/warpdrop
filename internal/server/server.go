@@ -8,6 +8,7 @@ import (
 
 	"warpdrop/internal/auth"
 	"warpdrop/internal/storage"
+	"warpdrop/internal/ws"
 )
 
 // Config holds runtime configuration options for WarpDrop HTTP server.
@@ -15,6 +16,7 @@ type Config struct {
 	Port       int
 	Token      string
 	PINManager *auth.PINManager
+	WSHub      *ws.Hub
 	Storage    storage.StorageProvider
 	StaticFS   http.FileSystem
 }
@@ -46,11 +48,15 @@ func NewServer(cfg Config) *Server {
 	apiMux.HandleFunc("/api/v1/upload", UploadHandler(cfg.Storage))
 	apiMux.HandleFunc("/api/v1/files", ListFilesHandler(cfg.Storage))
 	apiMux.HandleFunc("/api/v1/download", DownloadHandler(cfg.Storage))
+	apiMux.HandleFunc("/api/v1/download-all", DownloadAllHandler(cfg.Storage))
+	apiMux.HandleFunc("/api/v1/ws", WSHandler(cfg.WSHub))
 
 	// Mount protected API routes with AuthMiddleware
 	mux.Handle("/api/v1/upload", AuthMiddleware(cfg.Token, apiMux))
 	mux.Handle("/api/v1/files", AuthMiddleware(cfg.Token, apiMux))
 	mux.Handle("/api/v1/download", AuthMiddleware(cfg.Token, apiMux))
+	mux.Handle("/api/v1/download-all", AuthMiddleware(cfg.Token, apiMux))
+	mux.Handle("/api/v1/ws", AuthMiddleware(cfg.Token, apiMux))
 
 	// Static web assets handler (if provided)
 	if cfg.StaticFS != nil {
