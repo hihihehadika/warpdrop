@@ -48,7 +48,12 @@ func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request, clientID string) 
 		id:   clientID,
 	}
 
-	client.hub.register <- client
+	select {
+	case client.hub.register <- client:
+	case <-client.hub.stopChan:
+		client.conn.Close()
+		return
+	}
 
 	go client.writePump()
 	go client.readPump()
@@ -56,7 +61,10 @@ func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request, clientID string) 
 
 func (c *Client) readPump() {
 	defer func() {
-		c.hub.unregister <- c
+		select {
+		case c.hub.unregister <- c:
+		case <-c.hub.stopChan:
+		}
 		c.conn.Close()
 	}()
 
