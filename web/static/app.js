@@ -24,9 +24,21 @@ document.addEventListener('DOMContentLoaded', () => {
     initDropzone();
     initFileInput();
     initPinInput();
+    initClipboardInput();
     checkHealth();
     verifyAuthAndInit();
 });
+
+function initClipboardInput() {
+    const input = document.getElementById('clipboardInput');
+    if (!input) return;
+    input.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+            e.preventDefault();
+            sendClipboardText();
+        }
+    });
+}
 
 // Verify Authentication and Initialize Services
 function verifyAuthAndInit() {
