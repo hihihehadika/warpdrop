@@ -23,6 +23,7 @@ func StreamZip(w io.Writer, files []storage.FileInfo, provider storage.StoragePr
 	defer zipWriter.Close()
 
 	buf := make([]byte, 64*1024)
+	writtenCount := 0
 
 	for _, file := range files {
 		reader, info, err := provider.GetFileReader(file.Name)
@@ -52,7 +53,12 @@ func StreamZip(w io.Writer, files []storage.FileInfo, provider storage.StoragePr
 		if err != nil {
 			return err
 		}
+		writtenCount++
 	}
 
-	return nil
+	if writtenCount == 0 {
+		return ErrNoFilesToArchive
+	}
+
+	return zipWriter.Close()
 }
