@@ -74,8 +74,8 @@ func MaskToken(token string) string {
 	return token[:4] + strings.Repeat("*", len(token)-8) + token[len(token)-4:]
 }
 
-// FormatBanner generates a formatted status banner containing connection instructions.
-func FormatBanner(ip string, port int, token string, storageDir string) string {
+// FormatBanner generates a formatted status banner containing connection instructions and active quick PIN.
+func FormatBanner(ip string, port int, token string, pin string, storageDir string) string {
 	url := fmt.Sprintf("http://%s:%d/?token=%s", ip, port, token)
 	qrArt, err := RenderTerminalQR(url)
 	if err != nil {
@@ -89,14 +89,16 @@ func FormatBanner(ip string, port int, token string, storageDir string) string {
 	sb.WriteString("\n" + separator + "\n")
 	sb.WriteString("WARPDROP - High-Performance Local P2P File Drop Engine\n")
 	sb.WriteString(separator + "\n")
-	sb.WriteString(fmt.Sprintf("[STATUS]  Server aktif pada port: %d\n", port))
-	sb.WriteString(fmt.Sprintf("[NETWORK] Alamat IP Lokal: %s\n", ip))
-	sb.WriteString(fmt.Sprintf("[FOLDER]  Direktori Penyimpanan: %s\n", storageDir))
+	sb.WriteString(fmt.Sprintf("[STATUS]    Server aktif pada port: %d\n", port))
+	sb.WriteString(fmt.Sprintf("[NETWORK]   Alamat IP Lokal: %s\n", ip))
+	sb.WriteString(fmt.Sprintf("[PIN CEPAT] Kunci PIN 4-Digit: %s\n", pin))
+	sb.WriteString(fmt.Sprintf("[FOLDER]    Direktori Penyimpanan: %s\n", storageDir))
 	sb.WriteString("\nArahkan kamera HP ke QR Code di bawah untuk menghubungkan:\n\n")
 	sb.WriteString(qrArt)
 	sb.WriteString("\nAlamat URL Akses (Token Terproteksi):\n")
 	sb.WriteString(fmt.Sprintf("%s\n", maskedURL))
-	sb.WriteString("(Pindai QR Code di atas dengan kamera HP untuk autentikasi otomatis)\n\n")
+	sb.WriteString("(Pindai QR Code di atas dengan kamera HP untuk autentikasi otomatis,\n")
+	sb.WriteString(fmt.Sprintf(" atau buka http://%s:%d dan masukkan PIN: %s)\n\n", ip, port, pin))
 	sb.WriteString("[PANDUAN OPERASIONAL]\n")
 	sb.WriteString("1. Pastikan HP dan Laptop terhubung ke WiFi atau Hotspot yang sama.\n")
 	sb.WriteString("2. Jika koneksi gagal, router kemungkinan mengaktifkan AP Isolation.\n")

@@ -49,15 +49,17 @@ func TestFormatBanner(t *testing.T) {
 	ip := "192.168.43.15"
 	port := 8080
 	token := "abcdef0123456789"
+	pin := "7419"
 	storageDir := "./warpdrop_received"
 
-	banner := FormatBanner(ip, port, token, storageDir)
+	banner := FormatBanner(ip, port, token, pin, storageDir)
 
 	expectedSubstrings := []string{
 		"WARPDROP",
 		"192.168.43.15",
 		"8080",
 		MaskToken(token),
+		pin,
 		storageDir,
 		"[PANDUAN OPERASIONAL]",
 		"AP Isolation",
