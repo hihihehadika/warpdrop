@@ -6,7 +6,9 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
+	"strings"
 
 	"warpdrop/internal/storage"
 )
@@ -62,7 +64,9 @@ func DownloadHandler(provider storage.StorageProvider) http.HandlerFunc {
 		}
 		defer reader.Close()
 
-		w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", info.Name))
+		safeAscii := strings.ReplaceAll(strings.ReplaceAll(info.Name, "\"", ""), ";", "")
+		encodedUtf8 := url.PathEscape(info.Name)
+		w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"; filename*=UTF-8''%s", safeAscii, encodedUtf8))
 		w.Header().Set("Content-Type", "application/octet-stream")
 		w.Header().Set("Content-Length", fmt.Sprintf("%d", info.Size))
 
